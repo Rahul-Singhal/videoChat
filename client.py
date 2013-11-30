@@ -36,10 +36,31 @@ def connectToFriend():
 	message=""
 	message += user + "," + friend + "," + `myTcpPort`;
 	#print message
-	print s_udp.sendto(message,("localhost", serverPort))
-	
+	s_udp.sendto(message,("localhost", serverPort))
 	response, addr = s_udp.recvfrom(1024) # buffer size is 1024 bytes                                                                                                      
 	print "received message:", response
+
+def listenOnUdpForCall():
+	global s_tcp
+	global s_udp
+	request, addr = s_udp.recvfrom(1024) # buffer size is 1024 bytes                                                                                                      
+	print "received message:", request
+	request = request.split(',')
+	newConnection = socket(AF_INET, SOCK_STREAM)
+	newConnection.bind(("localhost", 0))
+	newConnection.connect((request[0], int(request[1])))
+
+def startSession():
+	global s_tcp
+	newConnection, friendAddress = s_tcp.accept()
+	print "connected!!" 
+
+def makeOnline():
+	global user
+	message=""
+	message += "makeOnline," + user + "," + `myTcpPort`;
+	#print message
+	s_udp.sendto(message,("localhost", serverPort))
 
 
 
@@ -47,12 +68,17 @@ def connectToFriend():
 user = raw_input("Enter your name: ")
 createTcpSocket()
 
-action = raw_input("Press 1 to start video chat with a friend and 0 to wait for a call!!")
+action = input("Press 1 to start video chat with a friend and 0 to wait for a call!!")
+print action
 if action == 1:
 	createUdpSocket()
 	connectToFriend()
+	startSession()
 else:
 	createUdpSocket();
+	makeOnline()
+	print "Waiting for a call!"
+	listenOnUdpForCall()
 
 # HOST = ''
 # PORT = 8001
